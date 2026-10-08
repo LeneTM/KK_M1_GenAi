@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GenAI in de fases van je onderzoek</title>
+<style>
+:root{--blauw:#00283c;--zacht:#3d5567;--or:#fa6432;--osoft:#ffe2d4;--oline:#ffc4a3;--oink:#5c3018;
+  --bg:#fff;--card:#fff;--txt:#00283c;--body:#33404f;--mut:#5c6b7a;--line:#d8dde3;--stroke:#00283c;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08131c;--card:#0f2231;--txt:#e6f0ff;--body:#d3deea;--mut:#a9b9c8;--line:#254053;--stroke:#e6f0ff;--osoft:#3a2418;--oline:#7a3f22;--oink:#ffd9c6;--zacht:#8fa8bb}}
+:root[data-theme="dark"]{--bg:#08131c;--card:#0f2231;--txt:#e6f0ff;--body:#d3deea;--mut:#a9b9c8;--line:#254053;--stroke:#e6f0ff;--osoft:#3a2418;--oline:#7a3f22;--oink:#ffd9c6;--zacht:#8fa8bb}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI",Arial,Helvetica,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 18px 32px}
+.stage{display:flex;gap:24px;align-items:flex-start}
+.dcol{flex:1 1 440px;min-width:0;display:flex;justify-content:center}
+.dcol svg{width:100%;max-width:560px;height:auto;overflow:visible}
+.node-group{cursor:pointer}
+.node-circle{fill:var(--card);stroke:var(--stroke);stroke-width:3;transition:fill .15s,stroke .15s}
+.node-group:hover .node-circle,.node-group:focus-visible .node-circle{fill:var(--osoft);stroke:var(--or)}
+.node-group.active .node-circle{fill:var(--or);stroke:var(--stroke)}
+.node-group.seen .node-circle{stroke:var(--or)}
+.node-num{font-family:Georgia,serif;font-size:26px;font-weight:700;fill:var(--txt);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node-group.active .node-num{fill:#fff}
+.node-label{font-size:19px;font-weight:700;fill:var(--txt);text-anchor:middle;pointer-events:none}
+.flow-ring{fill:none;stroke:var(--zacht);stroke-width:2;opacity:.3}
+.arrow{fill:none;stroke:var(--zacht);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:.6}
+.crit-ring{fill:none;stroke:var(--or);stroke-width:6;stroke-dasharray:2 14;stroke-linecap:round;cursor:pointer;transition:stroke .15s}
+.crit-ring:hover,.crit-ring.active{stroke:var(--txt)}
+.crit-text{font-size:21px;font-weight:800;letter-spacing:1.5px;fill:var(--or);cursor:pointer;transition:fill .15s}
+.crit-text:hover,.crit-text.active{fill:var(--txt)}
+.hub-t{font-family:Georgia,serif;font-size:24px;font-weight:700;fill:var(--txt);text-anchor:middle;pointer-events:none}
+.hub-s{font-size:14px;fill:var(--mut);text-anchor:middle;pointer-events:none}
+.hub-o{font-size:14px;font-weight:700;fill:var(--or);text-anchor:middle;pointer-events:none}
+.pcol{flex:1 1 320px;min-width:260px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;min-height:260px;box-shadow:0 1px 3px rgba(0,40,60,.08)}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--or);font-weight:700;margin-bottom:8px}
+.panel h3,.cpanel h3{font-family:Georgia,serif;margin:0 0 12px;font-size:20px;line-height:1.3}
+.panel h3{color:var(--txt)}
+.panel p{margin:0 0 10px;font-size:15px;line-height:1.6;color:var(--body)}
+.ph{color:var(--mut)!important;font-style:italic}
+ul.l{margin:0 0 14px;padding-left:20px;font-size:15px;line-height:1.55;color:var(--body)}
+ul.l li{margin-bottom:4px}ul.l li::marker{color:var(--or)}ul.l ul{margin-top:4px;padding-left:18px}
+.call{background:var(--osoft);border:1px solid var(--oline);color:var(--oink);border-radius:8px;padding:11px 14px;font-weight:700;font-size:15px;margin-bottom:12px}
+.me,.ai{border-radius:8px;padding:12px 14px;font-size:14.5px;line-height:1.5;margin-top:12px}.me ul.l,.ai ul.l{margin:6px 0 0;font-size:14.5px}.me b,.ai b{font-size:15px}
+.me{border:2px solid var(--or);background:var(--osoft);color:var(--oink)}.me ul.l{color:var(--oink)}
+.ai{border:1px dashed var(--line);color:var(--mut)}
+.me b,.ai b{display:block}
+.cpanel{margin-top:16px;background:var(--card);border:2px solid var(--or);border-radius:10px;padding:22px 24px;display:none;box-shadow:0 2px 8px rgba(0,40,60,.25)}
+.cpanel.on{display:block}
+.cpanel h3{color:var(--txt)}
+.cpanel p{margin:0 0 10px;font-size:15px;line-height:1.6;color:var(--body)}
+.cpanel ul.l{color:var(--body)}
+.cpanel b{color:var(--txt)}
+.cpanel .own{margin-top:12px;background:var(--osoft);border:1px solid var(--oline);border-radius:8px;padding:11px 14px;font-weight:700;color:var(--oink)}
+.prog{margin-top:16px;display:flex;align-items:center;gap:10px}
+.bar{flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--or);border-radius:4px;transition:width .25s}
+.pt{font-size:12px;color:var(--mut);white-space:nowrap}.pt b{color:var(--txt)}
+.legend{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut)}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:16px;border-top:3px solid var(--zacht);opacity:.6}.sw.d{border-top:4px dotted var(--or);opacity:1}
+:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+@media (max-width:760px){.stage{flex-direction:column}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="stage">
+ <div class="dcol">
+  <svg viewBox="0 0 900 900" role="img" aria-label="Cirkelvormige route door de fases van je literatuuronderzoek">
+   <circle class="flow-ring" cx="450" cy="450" r="320"/>
+   <g id="arrows"></g>
+   <circle class="crit-ring" id="critRing" tabindex="0" role="button" aria-label="Blijf kritisch – geldt in elke fase" cx="450" cy="450" r="230"/>
+   <path id="arc" d="M 298.4,362.5 A 175,175 0 0,1 601.6,362.5" fill="none"/>
+   <text class="crit-text" id="critText" tabindex="0" role="button" aria-label="Blijf kritisch – geldt in elke fase"><textPath href="#arc" startOffset="50%" text-anchor="middle">BLIJF KRITISCH</textPath></text>
+   <text class="hub-t" x="450" y="415">GenAI in de</text>
+   <text class="hub-t" x="450" y="447">fases van je</text>
+   <text class="hub-t" x="450" y="479">onderzoek</text>
+   <text class="hub-s" x="450" y="515">klik op een fase</text>
+   <g id="nodes"></g>
+  </svg>
+ </div>
+ <div class="pcol">
+  <div class="panel" id="panel" aria-live="polite">
+   <div class="eyebrow">Jouw route</div>
+   <h3>Begin hier</h3>
+   <p class="ph">Klik op een fase in de cirkel, of op de oranje boog, om de uitleg te zien.</p>
+   <p class="ph">In elke fase blijf jij de auteur van je onderzoek. GenAI is een assistent die ondersteunt.</p>
+  </div>
+  <div class="cpanel" id="cpanel" aria-live="polite">
+   <div class="eyebrow">Blijf kritisch – in elke fase</div>
+   <h3>GenAI is geen informatiebron</h3>
+   <ul class="l"><li>GenAI kan fouten maken:<ul><li>Kan bronnen verzinnen</li><li>Begrijpt context niet volledig</li><li>Reflecteert bias uit data</li></ul></li></ul>
+   <p>Controleer dus alles wat GenAI aanreikt in een echte databank of bij de originele bron, en neem niets zomaar over.</p>
+  </div>
+  <div class="prog"><div class="bar"><div class="fill" id="fill"></div></div><div class="pt" id="pt"><b>0</b> van 6 onderdelen bekeken</div></div>
+  <div class="legend"><span><i class="sw"></i> Volgorde van de fases</span><span><i class="sw d"></i> Blijf kritisch (doorlopend)</span></div>
+ </div>
+</div></div>
+<script>
+var S=[
+{l:["Verkennen"],t:"Het thema verkennen",
+ i:"In deze fase zoek je een geschikt onderwerp. Je kijkt breed, probeert invalshoeken uit en bepaalt wat je interesseert en haalbaar lijkt.",
+ b:["Gebruik <b>GenAI voor ideeën en exploratie</b> en laat begrippen en mogelijke invalshoeken schetsen om een eerste beeld te krijgen.", "Vraag <b>meerdere opties</b>, zodat je verschillende richtingen krijgt in plaats van één antwoord.", "<b>Vergelijk en selecteer</b> de opties door ze af te wegen en te kiezen wat bij jouw opdracht past.", "<b>Blijf kritisch</b> en beschouw wat GenAI voorstelt als vertrekpunt, niet als vaststaande kennis."],
+ me:["Je kiest het thema en de invalshoek.","Je beslist welke ideeën je verder uitwerkt en welke je laat vallen."],
+ ai:["Levert ideeën, opties en uitleg bij begrippen.","Is een denkpartner en geen kennisbron."]},
+{l:["Afbakenen"],t:"De onderzoeksvraag afbakenen",
+ i:"Je werkt van een breed thema naar een onderzoeksvraag die concreet is en haalbaar binnen je tijd en beschikbare bronnen.",
+ b:["Maak <b>onderwerp en onderzoeksvraag concreet</b> door het thema te beperken tot een duidelijke focus.", "<b>Formuleer meerdere vragen</b>, probeer varianten uit en laat GenAI meedenken over de formulering.", "<b>Vergelijk de haalbaarheid</b> en ga na welke vraag je met de beschikbare tijd en bronnen kunt beantwoorden.", "<b>Check met je begeleider</b> en bespreek je keuze voor je verdergaat."],
+ me:["Je formuleert en kiest de onderzoeksvraag.","Je legt je keuze voor aan je begeleider."],
+ ai:["Helpt varianten van vragen formuleren en vergelijken.","Kent de context en beoordelingscriteria van jouw opdracht niet volledig."]},
+{l:["Zoeken &","selecteren"],t:"Bronnen zoeken &amp; selecteren",
+ i:"Je verzamelt literatuur en beslist wat relevant en betrouwbaar genoeg is voor je onderzoek.",
+ b:["Gebruik <b>GenAI voor zoektermen</b> en laat synoniemen, vertalingen en verwante begrippen voorstellen.", "Gebruik <b>specifieke GenAI-tools voor literatuuronderzoek</b> om publicaties op te sporen, maar controleer de resultaten steeds.", "Gebruik <b>klassieke academische databanken</b>, want daar vind je betrouwbare en verifieerbare bronnen.", "<b>Screen titels en abstracts</b> om snel te bekijken of een bron past bij je onderzoeksvraag.", "<b>Controleer bronnen</b> door na te gaan of ze bestaan, wie de auteur is en waar ze verschenen zijn."],
+ me:["Je bepaalt je zoekstrategie en kiest de databanken.","Je beslist welke bronnen in je onderzoek terechtkomen."],
+ ai:["Stelt zoektermen voor en helpt bij het screenen van titels en abstracts.","Is zelf geen wetenschappelijke databank en geen bron."]},
+{l:["Analyseren"],t:"Analyseren",
+ i:"Je leest de geselecteerde bronnen grondig om te begrijpen wat ze zeggen en hoe de auteurs tot hun resultaten komen.",
+ b:["Laat <b>uitleg geven</b> bij moeilijke passages of begrippen.", "Focus op <b>methode en resultaat</b> om te begrijpen hoe het onderzoek is uitgevoerd en wat eruit komt.", "Check de <b>beperkingen</b> en let op de reikwijdte en de zwakke punten van elke bron.", "<b>Controleer zelf</b> elke uitleg van GenAI door ze te vergelijken met de originele tekst."],
+ me:["Je leest de bron zelf en beoordeelt de kwaliteit ervan.","Je trekt de conclusies uit wat je gelezen hebt."],
+ ai:["Verheldert op jouw vraag moeilijke passages en begrippen.","Kan een bron verkeerd weergeven, daarom controleer jij."]},
+{l:["Synthetiseren","& refereren"],t:"Synthetiseren &amp; refereren",
+ i:"Je brengt de bronnen samen tot een eigen verhaal en verwijst er correct naar.",
+ b:["<b>Vergelijk en verbind bronnen</b> en zoek overeenkomsten, verschillen en hiaten.", "Gebruik <b>AI voor structuur</b> en laat een mogelijke opbouw voorstellen.", "Blijf <b>zelf interpreteren</b>, want de inhoudelijke link tussen bronnen leg jij.", "Laat AI je <b>referenties vormelijk controleren</b>, dus de opmaak en consistentie, niet de inhoud."],
+ me:["Je interpreteert, schrijft en legt de verbanden.","Je beslist over de inhoud en de opbouw van je tekst."],
+ ai:["Stelt structuren voor en controleert de vorm van je referenties.","Schrijft de inhoud niet in jouw plaats."]}
+];
+var NS="http://www.w3.org/2000/svg",R=320,C=450,seen={},nodes=[];
+function P(deg){var a=deg*Math.PI/180;return[C+R*Math.sin(a),C-R*Math.cos(a),Math.cos(a),Math.sin(a)]}
+function el(n,at,p){var e=document.createElementNS(NS,n);for(var k in at)e.setAttribute(k,at[k]);if(p)p.appendChild(e);return e}
+S.forEach(function(s,i){
+  var p=P(i*72),g=el("g",{"class":"node-group",tabindex:0,role:"button","data-i":i,"aria-label":"Fase "+(i+1)+": "+s.t.replace("&amp;","&")},document.getElementById("nodes"));
+  el("circle",{"class":"node-circle",cx:p[0],cy:p[1],r:58},g);
+  el("text",{"class":"node-num",x:p[0],y:p[1]+1},g).textContent=i+1;
+  var t=el("text",{"class":"node-label",x:p[0],y:p[1]+78},g);
+  s.l.forEach(function(x,j){var ts=el("tspan",{x:p[0],dy:j?19:0},t);ts.textContent=x});
+  nodes.push(g);
+  var m=P(i*72+36),tx=m[2],ty=m[3],nx=-ty,ny=tx,
+  d="M "+(m[0]-tx*5+nx*9)+","+(m[1]-ty*5+ny*9)+" L "+(m[0]+tx*7)+","+(m[1]+ty*7)+" L "+(m[0]-tx*5-nx*9)+","+(m[1]-ty*5-ny*9);
+  el("path",{"class":"arrow",d:d},document.getElementById("arrows"));
+});
+var panel=document.getElementById("panel"),cp=document.getElementById("cpanel"),ring=document.getElementById("critRing"),rt=document.getElementById("critText");
+function prog(k){seen[k]=1;var n=Object.keys(seen).length;document.getElementById("fill").style.width=Math.round(n/6*100)+"%";document.getElementById("pt").innerHTML="<b>"+n+"</b> van 6 onderdelen bekeken"}
+function clear(){nodes.forEach(function(g){g.classList.remove("active")});ring.classList.remove("active");rt.classList.remove("active")}
+function step(i){
+  clear();nodes[i].classList.add("active");nodes[i].classList.add("seen");cp.classList.remove("on");panel.style.display="block";var s=S[i];
+  var L=function(x){return"<ul class='l'>"+x.map(function(y){return"<li>"+y+"</li>"}).join("")+"</ul>"};
+  panel.innerHTML="<div class='eyebrow'>Fase "+(i+1)+" van 5</div><h3>"+s.t+"</h3><p>"+s.i+"</p>"+L(s.b)+
+  "<div class='me'><b>🧑‍🎓 Jij als auteur</b>"+L(s.me)+"</div><div class='ai'><b>🤖 GenAI als assistent</b>"+L(s.ai)+"</div>";
+  prog(i);
+}
+function crit(){clear();ring.classList.add("active");rt.classList.add("active");panel.style.display="none";cp.classList.add("on");prog("k")}
+function key(f){return function(e){if(e.key=="Enter"||e.key==" "){e.preventDefault();f()}}}
+nodes.forEach(function(g,i){g.addEventListener("click",function(){step(i)});g.addEventListener("keydown",key(function(){step(i)}))});
+[ring,rt].forEach(function(e){e.addEventListener("click",crit);e.addEventListener("keydown",key(crit))});
+</script>
+</body>
+</html>
