@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GenAI Blind Spots – let op met input, output en impact</title>
+<style>
+:root{--blauw:#00283c;--zacht:#3d5567;--or:#fa6432;--osoft:#ffe2d4;--oline:#ffc4a3;--oink:#5c3018;--body:#33404f;--mut:#5c6b7a;--line:#d8dde3;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--blauw);font-family:-apple-system,"Segoe UI",Arial,Helvetica,sans-serif}
+.wrap{font-size:clamp(14px,1.3vw,19px);max-width:1500px;margin:0 auto;padding:1.4em 1.1em 2em}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1em;align-items:start}
+.col{background:#fff;border:1px solid var(--line);border-top:.45em solid var(--blauw);border-radius:.7em;padding:1em 1em 1.1em;box-shadow:0 1px 3px rgba(0,40,60,.08)}
+.col h2{font-family:Georgia,serif;font-size:1.2em;margin:0 0 .8em;line-height:1.25}
+.col small{display:block;color:var(--mut);margin:.2em 0 .9em}
+.chip{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;margin-bottom:.55em;padding:.7em .9em;border:2px solid var(--blauw);border-radius:.7em;background:#fff;color:var(--blauw);font-weight:700;line-height:1.3;transition:background .15s,border-color .15s}
+.chip:hover,.chip:focus-visible{background:var(--osoft);border-color:var(--or)}
+.chip.seen{border-color:var(--or)}
+.chip.active{background:var(--osoft);border-color:var(--or);color:var(--blauw)}
+.panel{margin-top:1.2em;border:1px solid var(--line);border-radius:.625em;padding:1.375em 1.5em;box-shadow:0 1px 3px rgba(0,40,60,.08)}
+.eb{font-size:.75em;text-transform:uppercase;letter-spacing:.6px;color:var(--or);font-weight:700;margin-bottom:.5em}
+.panel h3{font-family:Georgia,serif;margin:0 0 .6em;font-size:1.3em;line-height:1.3}
+.panel p{margin:0 0 .7em;line-height:1.6;color:var(--body)}
+.ph{color:var(--mut)!important;font-style:italic}
+.do{background:#fff;border:1px solid var(--or);border-radius:.5em;padding:.8em 1em;margin-top:1em;color:var(--body);line-height:1.55}
+.do b{display:block;margin-bottom:.2em;color:var(--blauw)}
+.do ul{margin:.3em 0 0;padding-left:1.2em}.do li{margin-bottom:.35em}.do li::marker{color:var(--or)}
+.prog{margin-top:1em;display:flex;align-items:center;gap:10px}
+.bar{flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--or);border-radius:4px;transition:width .25s}
+.pt{font-size:.8em;color:var(--mut);white-space:nowrap}.pt b{color:var(--blauw)}
+.src{font-size:.8em;color:var(--mut);margin:.6em 0 0}
+:focus-visible{outline:none}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="cols" id="cols"></div>
+ <div class="panel" id="panel" aria-live="polite">
+  <div class="eb">Blinde vlekken</div>
+  <h3>Begin hier</h3>
+  <p class="ph">Klik op een blinde vlek in een van de drie kolommen om te lezen wat die inhoudt en wat je er zelf aan kan doen.</p>
+ </div>
+ <div class="prog"><div class="bar"><div class="fill" id="fill"></div></div><div class="pt" id="pt"><b>0</b> van 12 bekeken</div></div>
+</div>
+<script>
+var D=[
+{l:["Databescherming","en privacy"],t:"Databescherming en privacy",d:"Gegevens die je invoert in een GenAI-toepassing kunnen hergebruikt worden om de toepassing verder te trainen. Wees voorzichtig met privacygevoelige informatie en bedrijfsinformatie.",a:["Voer geen privacygevoelige informatie of bedrijfsinformatie in wanneer je niet zeker weet wat er met deze data gebeurt."]},
+{l:["Datakwaliteit"],t:"Datakwaliteit",d:"GenAI-toepassingen worden getraind op basis van een set gegevens. Op basis van die gegevens genereren ze nieuwe inhoud. Een fout in die gegevens betekent ook mogelijke fouten in gegenereerde uitkomsten (zie ook: bias).",a:["Zoek informatie over de trainingsdata: welke bias of fouten kunnen daaruit voortkomen?","Controleer de gegenereerde resultaten op fouten."]},
+{l:["Ecologische","duurzaamheid"],t:"Ecologische duurzaamheid",d:"GenAI-toepassingen verbruiken enorm veel energie, water en zeldzame grondstoffen. Voor sommige zoekopdrachten of taken bestaan er andere, minder belastende alternatieven.",a:["Zijn er tools en zoekmachines die hetzelfde resultaat opleveren, maar hiervoor minder grondstoffen verbruiken?"]},
+{l:["Auteursrecht"],t:"Auteursrecht",d:"Veel trainingsdata voor GenAI-tools worden gebruikt zonder toestemming van de auteurs. Dat is een inbreuk op het auteursrecht.",a:["Zijn er alternatieve tools voor jouw vraag (bv. rechtenvrije afbeeldingen, eigen materiaal, …)?"]},
+{l:["Vooroordelen","(bias)"],t:"(Indirecte) vooroordelen (bias)",d:"GenAI-tools kunnen vooroordelen versterken, wanneer de trainingsdata onvolledig zijn, over- of onderrepresentatief zijn, of stereotiepe informatie bevatten.",a:["Wees niet te snel tevreden met GenAI-gegenereerde content.","Pas je prompt zo aan dat de tool meer diverse, minder stereotiepe uitkomsten geeft.","Corrigeer zelf indirecte bias in het resultaat."]},
+{l:["Actualiteit"],t:"Actualiteit",d:"Een GenAI-tool is niet altijd up-to-date en houdt niet altijd rekening met de actualiteit.",a:["Controleer de ‘versheidsdatum’ van de tool: tot welke datum werd de tool getraind en is dat voldoende actueel?"]},
+{l:["Doeltreffendheid"],t:"Doeltreffendheid",d:"Een GenAI-tool kan zo handig lijken dat je niet meer ziet of die wel echt helpt je doel te bereiken.",a:["Heb je een duidelijk idee van wat je met de tool wil bereiken?","Is GenAI daar echt de beste oplossing voor?","Geef duidelijke instructies, gewenste uitkomst en belangrijke criteria mee in je prompt."]},
+{l:["Hallucinaties"],t:"Hallucinaties",d:"Een GenAI-toepassing imiteert menselijke taal en weet niet wat feitelijk correcte antwoorden zijn, enkel wat statistisch waarschijnlijk is. Daarom kan een GenAI-voorspelling fout zijn: een ‘hallucinatie’.",a:["Heb je zeker voldoende expertise of kennis om de kwaliteit van GenAI-uitkomsten te verifiëren en corrigeren?","Vraag expliciet naar de gebruikte bronnen, en baken in je prompt af dat er geen bronnen of informatie verzonnen mogen worden.","Blijf kritisch kijken naar de uitkomsten van een GenAI-tool: hoe overtuigend de tool ook mag klinken, er wordt geen betrouwbare kennis gegenereerd."]},
+{l:["Meeloperij","(sycophancy)"],t:"Meeloperij (sycophancy)",d:"GenAI-toepassingen zijn ontworpen om de gebruiker tevreden te houden. Daarom passen ze soms antwoorden aan aan de mening van de gebruiker. Dat kan leiden tot misinformatie en selectieve antwoorden.",a:["Als je merkt dat de tool tegenstrijdig, onsamenhangend of ‘pleasend’ antwoordt, wees dan specifiek in je prompt: vraag om verschillende standpunten toe te lichten, vraag naar het wetenschappelijke perspectief, vraag naar bronvermelding."]},
+{l:["Menselijke kennis","en toezicht"],t:"Menselijke kennis en toezicht",d:"Om de kwaliteit van GenAI-gegenereerde antwoorden kritisch te beoordelen, heb je zelf voldoende kennis van een onderwerp nodig. Vaak moet je de algemene antwoorden van GenAI nog vertalen naar jouw specifieke situatie of vraag.",a:["Ga er nooit van uit dat GenAI-tools het definitieve antwoord op je vraag kunnen geven.","Verbreed je onderzoek met wetenschappelijke bronnen en vraag naar de inzichten van experts ter zake."]},
+{l:["Verklaarbaarheid"],t:"Verklaarbaarheid",d:"Vaak is het niet duidelijk via welke paden een GenAI-tool tot een antwoord is gekomen. Dat gebrek aan transparantie over de gebruikte informatiebronnen zorgt ervoor dat de tool niet helemaal betrouwbaar is.",a:["Vraag in je prompt expliciet naar de gebruikte bronnen en baken af dat er geen bronnen verzonnen mogen worden.","Controleer of de gegenereerde antwoorden wel effectief zo in de originele bron terug te vinden zijn."]},
+{l:["Verrommeling","internet"],t:"Verrommeling internet (junkification)",d:"GenAI-tools genereren ook enorme hoeveelheden junk: content van lage kwaliteit die verspreid wordt om aandacht te trekken of algoritmes te manipuleren. Het toont aan dat die tools geen onderscheid maken tussen betrouwbare kennis en onbetrouwbare rommel.",a:["Blijf alert voor de steeds groter wordende hoeveelheid onbetrouwbare, niet-authentieke beelden en informatie die via internet verspreid worden."]},
+{l:["Misbruik"],t:"Misbruik",d:"GenAI-toepassingen kunnen op een misleidende, zelfs schadelijke manier worden ingezet.",a:["De output van GenAI-tools ziet er vaak overtuigend professioneel uit, maar schijn kan bedriegen.","Blijf alert, controleer beweringen en argumenten van zo’n tool en meet de content af aan wetenschappelijke bronnen."]}
+];
+var Q={0:"Wat deel ik met de tool?",1:"Waarop is de tool getraind?",3:"Wiens werk zit erin?",6:"Helpt GenAI me echt?",4:"Is dit antwoord vooringenomen?",5:"Is de tool up-to-date?",7:"Klopt dit wel?",8:"Zegt de tool wat ik wil horen?",9:"Weet ik genoeg om dit te beoordelen?",2:"Wat is de ecologische kost?",11:"Wat doet dit met het internet?",12:"Kan dit misleiden of schaden?"};
+var C=[
+{n:"Let op de input",s:"",i:[0,1,3,6]},
+{n:"Let op de output",s:"",i:[4,5,7,8,9]},
+{n:"Let op de impact",s:"Wat het daarbuiten doet",i:[2,11,12]}
+];
+var chips={},seen={},N=C.reduce(function(a,c){return a+c.i.length},0);
+var cols=document.getElementById("cols"),panel=document.getElementById("panel");
+C.forEach(function(c){
+  var d=document.createElement("section");d.className="col";
+  d.innerHTML="<h2>"+c.n+"</h2>";
+  c.i.forEach(function(k){
+    var b=document.createElement("button");b.type="button";b.className="chip";b.textContent=Q[k];
+    b.addEventListener("click",function(){show(k,c.n)});
+    chips[k]=b;d.appendChild(b);
+  });
+  cols.appendChild(d);
+});
+function show(k,cn){
+  Object.keys(chips).forEach(function(i){chips[i].classList.remove("active")});
+  chips[k].classList.add("active","seen");
+  var s=D[k];
+  panel.innerHTML="<div class='eb'>"+cn+"</div><h3>"+s.t+"</h3><p>"+s.d+"</p><div class='do'><b>Wat kan je doen?</b><ul>"+s.a.map(function(x){return"<li>"+x+"</li>"}).join("")+"</ul></div>";
+  seen[k]=1;var n=Object.keys(seen).length;
+  document.getElementById("fill").style.width=Math.round(n/N*100)+"%";
+  document.getElementById("pt").innerHTML="<b>"+n+"</b> van "+N+" bekeken";
+  if(window.innerWidth<=760)panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+</script>
+</body>
+</html>
